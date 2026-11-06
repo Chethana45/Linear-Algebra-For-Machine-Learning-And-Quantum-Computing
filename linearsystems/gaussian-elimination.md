@@ -8,18 +8,42 @@ After obtaining the upper triangular form, the unknown variables are calculated 
 
 It is one of the fundamental techniques in Linear Algebra and numerical computation.
 
-## 2. Mathematical Representation
+## 2. Learning Objectives
+
+- Understand systems of linear equations.
+- Represent equations using augmented matrices.
+- Apply elementary row operations.
+- Perform forward elimination.
+- Understand pivot elements and partial pivoting.
+- Solve equations using back substitution.
+- Implement Gaussian Elimination using Python.
+
+## 3. Mathematical Foundation
 
 A system of linear equations can be represented as:
 
 Ax = b
 
 Where:
+
 - A is the coefficient matrix.
 - x is the vector of unknown variables.
 - b is the constant vector.
 
-## 3. Elementary Row Operations
+For example:
+
+2x + y = 5
+x + 3y = 7
+
+The matrix representation is:
+
+A = [[2, 1], [1, 3]]
+
+x = [x, y]
+
+b = [5, 7]
+
+## 4. Elementary Row Operations
 
 Gaussian Elimination uses three elementary row operations:
 
@@ -29,7 +53,7 @@ Gaussian Elimination uses three elementary row operations:
 
 These operations preserve the solution of the original system.
 
-## 4. Augmented Matrix
+## 5. Augmented Matrix
 
 Consider:
 
@@ -43,54 +67,116 @@ The augmented matrix is:
 [1  3  2 | 13]
 [3  2  4 | 19]
 
-## 5. Forward Elimination
+The objective is to eliminate elements below the main diagonal.
 
-The objective is to convert the augmented matrix into upper triangular form.
+## 6. Forward Elimination
+
+Forward elimination converts the augmented matrix into upper triangular form.
 
 An upper triangular matrix contains zeros below its main diagonal.
 
-Apply elementary row operations to eliminate the elements below each pivot.
-
-The resulting matrix becomes:
+For example:
 
 [2  1  1 | 7]
 [0  5  3 | 19]
-[0  0  11 | 22]
+[0  0  11 | 33]
 
-## 6. Back Substitution
+The last equation can now be solved first.
 
-Start solving from the last equation.
+## 7. Back Substitution
 
-11z = 22
-
-z = 2
-
-5y + 3z = 19
-
-5y + 6 = 19
-
-y = 13/5
+Consider the triangular system:
 
 2x + y + z = 7
+5y + 3z = 19
+11z = 33
 
-2x + 13/5 + 2 = 7
+Starting from the last equation:
 
-x = 12/5
+11z = 33
 
-## 7. Python Implementation
+z = 3
+
+Substitute z into the second equation:
+
+5y + 3(3) = 19
+
+5y = 10
+
+y = 2
+
+Substitute y and z into the first equation:
+
+2x + 2 + 3 = 7
+
+2x = 2
+
+x = 1
+
+Final solution:
+
+x = 1, y = 2, z = 3
+
+## 8. Pivot Elements and Partial Pivoting
+
+A pivot is the element used to eliminate other elements in a column.
+
+Partial pivoting selects the element with the largest absolute value in the current column and swaps rows when necessary.
+
+Advantages of partial pivoting:
+
+- Avoids division by zero when possible.
+- Reduces numerical instability.
+- Improves computational accuracy.
+
+## 9. Python Implementation
+
+The following implementation performs Gaussian Elimination with partial pivoting and back substitution.
 
 ```python
 import numpy as np
 
-A = np.array([
+def gaussian_elimination(A, b):
+    A = np.array(A, dtype=float)
+    b = np.array(b, dtype=float)
+
+    n = len(b)
+    augmented = np.column_stack((A, b))
+
+    # Forward elimination
+    for i in range(n):
+        pivot = i + np.argmax(np.abs(augmented[i:, i]))
+
+        if np.isclose(augmented[pivot, i], 0):
+            raise ValueError("Matrix is singular or has no unique solution")
+
+        augmented[[i, pivot]] = augmented[[pivot, i]]
+
+        for j in range(i + 1, n):
+            factor = augmented[j, i] / augmented[i, i]
+            augmented[j] -= factor * augmented[i]
+
+    # Back substitution
+    x = np.zeros(n)
+
+    for i in range(n - 1, -1, -1):
+        x[i] = (
+            augmented[i, -1]
+            - np.dot(augmented[i, i + 1:n], x[i + 1:n])
+        ) / augmented[i, i]
+
+    return x
+
+
+A = [
     [2, 1, 1],
     [1, 3, 2],
     [3, 2, 4]
-], dtype=float)
+]
 
-b = np.array([7, 13, 19], dtype=float)
+b = [7, 13, 19]
 
-solution = np.linalg.solve(A, b)
+solution = gaussian_elimination(A, b)
 
 print("Solution:", solution)
-print("Verification:", A @ solution)
+print("Verification:", np.array(A) @ solution)
